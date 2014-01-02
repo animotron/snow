@@ -24,6 +24,7 @@ package snow.console;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import sebebe.Function;
+import sebebe.StreamResults;
 
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public class Stdin extends Function {
     }
 
     @Override
-    public Map<String, JsonNode> execute(JsonNode params) {
+    public void execute(JsonNode params, StreamResults stream) {
 //        System.out.println(params.toString());
         
         if (params instanceof ObjectNode) {
@@ -57,8 +58,6 @@ public class Stdin extends Function {
                 }
             }
         }
-        
-        return null;
     }
 
 }

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import javolution.util.FastMap;
 import sebebe.Function;
+import sebebe.StreamResults;
 
 import java.util.Map;
 
@@ -39,16 +40,12 @@ public class Connect extends Function {
     }
 
     @Override
-    public Map<String, JsonNode> execute(JsonNode data) {
+    public void execute(JsonNode data, StreamResults stream) {
         Map<String, JsonNode> result = new FastMap<String, JsonNode>();
-
         JsonNode ref = data.get("ref");
         if (ref instanceof TextNode) {
             result.put("ref", ref);
         }
-        
         result.put("id", TextNode.valueOf(Terminal.create().id()));
-        
-        return result;
     }
 }
