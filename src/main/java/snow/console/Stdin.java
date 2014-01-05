@@ -34,27 +34,20 @@ import java.util.Map;
  */
 public class Stdin extends Function {
 
-    public Stdin() {
-        super("stdin");
-    }
+    public Stdin() {super("stdin");}
 
     @Override
     public void execute(JsonNode params, StreamResults stream) {
 //        System.out.println(params.toString());
-        
         if (params instanceof ObjectNode) {
             ObjectNode node = (ObjectNode) params;
-            
             JsonNode id = node.get("id");
             if (id != null) {
                 JsonNode data = node.get("data");
-                
                 if (data != null) {
                     Terminal terminal = Terminal.get(id.asText());
-                    
-                    if (terminal != null) {
+                    if (terminal != null)
                         terminal.in(data.asText());
-                    }
                 }
             }
         }

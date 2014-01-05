@@ -35,17 +35,13 @@ import java.util.Map;
  */
 public class Connect extends Function {
     
-    public Connect() {
-        super("connect");
-    }
+    public Connect() {super("connect");}
 
     @Override
     public void execute(JsonNode data, StreamResults stream) {
-        Map<String, JsonNode> result = new FastMap<String, JsonNode>();
         JsonNode ref = data.get("ref");
-        if (ref instanceof TextNode) {
-            result.put("ref", ref);
-        }
-        result.put("id", TextNode.valueOf(Terminal.create().id()));
+        if (ref instanceof TextNode)
+            stream.put("ref", ref);
+        stream.put("id", TextNode.valueOf(Terminal.create().id()));
     }
 }
