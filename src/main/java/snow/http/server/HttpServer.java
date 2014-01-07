@@ -47,6 +47,7 @@ import javax.net.ssl.SSLEngine;
 public class HttpServer {
 
     public static final String ROOT = "/";
+    public static final String RESOURCE = "/resource/";
     public static final String TMP = "/tmp/";
 
     private final static int MAX_AGE = 31536000;
@@ -75,10 +76,11 @@ public class HttpServer {
 
         private static HttpHandler[] httpHandlers = {
                 new WebSocketUpgradeHttpHandler(),
-                new Facebook(),
+                //new Facebook(),
                 new ApiHttpHandler(),
+                new ResourceHttpHandler(RESOURCE, "no-cache"),
                 new StaticHttpHandler(TMP, Core.TMP, "private, max-age=" + MAX_AGE),
-                new StaticHttpHandler(ROOT, "site", "no-cache")
+                new StaticHttpHandler(ROOT, "site", "no-cache"),
         };
 
         @Override
@@ -108,7 +110,7 @@ public class HttpServer {
 //            TTY load = new TTY();
 //            PILE pile = new PILE();
 
-//            start();
+            start();
 
             // Shell.process();
         } catch (Throwable throwable) {

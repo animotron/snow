@@ -26,10 +26,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.stream.ChunkedFile;
+import org.apache.commons.io.IOUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import javax.rmi.CORBA.Util;
+import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
@@ -42,29 +43,20 @@ import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static javax.activation.FileTypeMap.getDefaultFileTypeMap;
+import static snow.http.server.HttpHelper.sendHttpResponse;
 
 /**
  * @author <a href="mailto:gazdovsky@gmail.com">Evgeny Gazdovsky</a>
  *
  */
-public class StaticHttpHandler implements HttpHandler {
+public class ResourceHttpHandler implements HttpHandler {
 
-    private static final String INDEX = "/index.html";
     private final String uriContext;
-    private final File root;
     private final String cache;
 
-    public StaticHttpHandler(String uriContext, String root, String cache){
+    public ResourceHttpHandler(String uriContext, String cache){
         this.uriContext = uriContext;
         this.cache = cache;
-        this.root = new File(root);
-        if (!this.root.exists()) this.root.mkdirs();
-    }
-
-    public StaticHttpHandler(String uriContext, File root, String cache) {
-        this.uriContext = uriContext;
-        this.cache = cache;
-        this.root = root;
     }
 
     public static String mimeType(Path path) throws IOException {
@@ -75,44 +67,38 @@ public class StaticHttpHandler implements HttpHandler {
 
     private final static boolean useSendFile = true;
 
-    private void sendFile(final ChannelHandlerContext ctx, final FullHttpRequest request, final File file) throws Throwable {
-        final RandomAccessFile raf = new RandomAccessFile(file, "r");
+    private void sendURL(final ChannelHandlerContext ctx, final FullHttpRequest request, final String uri, final InputStream is) throws Throwable {
+        //final RandomAccessFile raf = new RandomAccessFile(file, "r");
         FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK);
-        long modified = file.lastModified();
+        //long modified = file.lastModified();
         Date since = HttpHelper.parseDate(getHeader(request, IF_MODIFIED_SINCE));
-        if (since != null && since.getTime() >= modified) {
-            HttpHelper.sendStatus(ctx, NOT_MODIFIED);
-        } else {
-            final long length = raf.length();
+//        if (since != null && since.getTime() >= modified) {
+//            HttpHelper.sendStatus(ctx, NOT_MODIFIED);
+//        } else {
+            byte[] buff = IOUtils.toByteArray(is);
+            final long length = buff.length;
             HttpHelper.setDate(response);
-            HttpHelper.setLastModified(response, modified);
+//            HttpHelper.setLastModified(response, modified);
             HttpHeaders.setContentLength(response, length);
-            HttpHeaders.setHeader(response, CONTENT_TYPE, mimeType(file.toPath()));
+            HttpHeaders.setHeader(response, CONTENT_TYPE, mimeType((new File(uri)).toPath()));
             setHeader(response, CACHE_CONTROL, cache);
 
 //            boolean isKeep = isKeepAlive(request);
 //            if (isKeep) {
 //                setHeader(response, CONNECTION, KEEP_ALIVE);
 //            }
-            ctx.write(response);
 
 //            ChannelFuture writeFuture = ctx.writeAndFlush(new ChunkedFile(raf, 0, length, 8192));
 
-            // Write the content.
-            ChannelFuture sendFileFuture;
-            if (useSendFile) {
-                sendFileFuture = ctx.write(new DefaultFileRegion(raf.getChannel(), 0, length));
-            } else {
-                sendFileFuture = ctx.write(new ChunkedFile(raf, 0, length, 8192));
-            }
 
-            // Write the end marker
-             //ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
 
-//            if (!isKeep) {
-            sendFileFuture.addListener(CLOSE);
+            response.content().writeBytes(buff);
+
+            sendHttpResponse(ctx, request, response);
+
+
 //            }
-        }
+//        }
     }
 
     @Override
@@ -125,15 +111,17 @@ public class StaticHttpHandler implements HttpHandler {
             return true;
         }
 
-        File file = new File(root, uri.substring(uriContext.length()));
-        if (file.isDirectory()) file = new File(file, INDEX);
+        uri = uri.substring(uriContext.length() - 1);
+
+        InputStream is = getClass().getResourceAsStream(uri);
+
         try {
-            if (!file.exists()) {
+            if (is == null) {
                 HttpErrorHelper.handle(ctx, request, NOT_FOUND);
                 return true;
             }
             //XXX: check that absolute URL starts from SITE
-            sendFile(ctx, request, file);
+            sendURL(ctx, request, uri, is);
         } catch (Throwable e) {
             e.printStackTrace();
             throw e;

@@ -22,7 +22,7 @@ package snow;
 
 import java.lang.reflect.Field;
 
-import static mneme.ID.fromString;
+import static snow.ID.fromString;
 
 //import org.neo4j.graphdb.Node;
 //import org.neo4j.graphdb.Transaction;

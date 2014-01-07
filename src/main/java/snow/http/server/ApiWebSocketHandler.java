@@ -72,10 +72,10 @@ public class ApiWebSocketHandler extends snow.http.server.WebSocketHandler<TextW
     public void handle(WebSocketServerHandshaker hs, final ChannelHandlerContext ctx, TextWebSocketFrame frame) throws IOException {
         ctxs.put(Thread.currentThread(), ctx);
         try {
-            JsonNode result = api.execute(frame.text());
-            if (result != null) {
-                ctx.writeAndFlush(new TextWebSocketFrame(result.toString()));
-            }
+//            JsonNode result = api.execute(frame.text());
+//            if (result != null) {
+//                ctx.writeAndFlush(new TextWebSocketFrame(result.toString()));
+//            }
         } finally {
             ctxs.remove(Thread.currentThread());
         }
